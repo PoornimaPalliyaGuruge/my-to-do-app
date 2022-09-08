@@ -1,46 +1,90 @@
-import React, { useState } from 'react';
-import './App.css';
-import { TodoForm } from './components/TodoForm';
-import { TodoList } from './components/TodoList';
+import React, { FC, ChangeEvent, useState } from "react";
+import "./App.css";
+import TodoTask from "./Components/TodoTask";
+import { ITask } from "./Interfaces";
 
-function App() {
-  const [todos, setTodos] = useState<Array<Todo>>([]);
+const App: FC = () => {
+  const [task, setTask] = useState<string>("");
+  const [search, setSearch] = useState<string>("");
+  const [deadline, setDealine] = useState<number>(0);
+  const [todoList, setTodoList] = useState<ITask[]>([]);
 
-  const toggleComplete: ToggleComplete = selectedTodo => {
-    const updatedTodos = todos.map(todo => {
-      if (todo === selectedTodo) {
-        return { ...todo, complete: !todo.complete };
-      }
-      return todo;
-    });
-    setTodos(updatedTodos);
-  };
-
-  const addTodo: AddTodo = newTodo => {
-    if (newTodo !== "") {
-      setTodos([...todos, { text: newTodo, complete: false }]);
+  const handleChange = (event: ChangeEvent<HTMLInputElement>): void => {
+    if (event.target.name === "task") {
+      setTask(event.target.value);
+    } else {
+      setDealine(Number(event.target.value));
     }
   };
 
-  const removeTodo: RemoveTodo = todoToRemove => {
-    let updatedTodos: Array<Todo> = todos.filter(todo => todo.text != todoToRemove.text);
-    setTodos(updatedTodos);
-  }
+  const addTask = (): void => {
+    const newTask = { taskName: task, deadline: deadline };
+    setTodoList([...todoList, newTask]);
+    setTask("");
+    setDealine(0);
+  };
 
-  const editTodo: EditTodo = todoToEdit => {
-    let todoToUpdateIndex: number = todos.findIndex(todo => todo.text == todoToEdit.text);
-    console.log(todoToUpdateIndex);
-  }
+  const completeTask = (taskNameToDelete: string): void => {
+    setTodoList(
+      todoList.filter((task) => {
+        return task.taskName !== taskNameToDelete;
+      })
+    );
+  };
 
   return (
-    <div className="todo-app">
+    <div className="App">
       <header>
-        <h1>
-        Todo App
-        </h1>
+        <h1 className="main-topic">To-do-List</h1>
+        <div className="sub">Let's Make Plans</div>
       </header>
-      <TodoForm addTodo={addTodo}/>
-      <TodoList todos={todos} toggleComplete={toggleComplete} onRemoveTodo={removeTodo} editTodo={editTodo}/>
+      <div className="header">
+        <div className="inputContainer">
+          <input
+            type="text"
+            placeholder="input task..."
+            name="task"
+            value={task}
+            onChange={handleChange}
+          />
+        </div>
+        <button onClick={addTask}>Add Task</button>
+      </div>
+      <div className="ui search">
+        <div className="ui icon input">
+          <input
+            type="text"
+            placeholder="Search tasks"
+            className="prompt"
+            style={{ height: "30px", width: "200px" }}
+            value={search}
+            onChange={(event: ChangeEvent<HTMLInputElement>): void =>
+              setSearch(event.target.value)
+            }
+          />
+          <i className="search icon"></i>
+        </div>
+      </div>
+
+      <div className="todoList">
+        {todoList
+          .filter((val: ITask) => {
+            if (search === "") {
+              return val;
+            } else if (
+              val.taskName.toLowerCase().includes(search.toLowerCase())
+            ) {
+              return val;
+            } else {
+              return null;
+            }
+          })
+          .map((task: ITask, key: number) => {
+            return (
+              <TodoTask key={key} task={task} completeTask={completeTask} />
+            );
+          })}
+      </div>
     </div>
   );
 };
